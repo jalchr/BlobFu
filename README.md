@@ -11,7 +11,7 @@ A library that makes it easy via a Fluent interface, to interact with Windows Bl
 
 Here's the current set of functionality, demonstrated by an NUnit output of the unit tests used to design BlobFu. Note, more tests may be added as the project evolves. 
 
-![BlobFu Unit Test Run](images/blobfu-unit-test-run.png?raw=true "BlobFu Unit Test Run")
+![BlobFu Unit Test Run](BlobFu/blob/master/Images/blobfu-unit-test-run.png?raw=true "BlobFu Unit Test Run")
 
 <a name="using-blobfu-within-aspnet" />
 ### Using BlobFu Within ASP.NET ###
@@ -21,30 +21,30 @@ Here's the Hello World example to demonstrate one of the best uses for Windows A
 #### Step 1 - Configure the Windows Azure Blob Storage Connection String####
 Add an application or web configuration setting with the connection string you'll be using that points to your Windows Azure storage account, as shown below. 
 
-![Configuring a site or app with the blob connection string](images/configuring-a-site-or-app-with-the-blob-conne.png?raw=true "Configuring a site or app with the blob connection string")
+![Configuring a site or app with the blob connection string](BlobFu/blob/master/Images/configuring-a-site-or-app-with-the-blob-conne.png?raw=true "Configuring a site or app with the blob connection string")
 
 Note: In this, the local storage account will be used, so make sure you're running your local storage emulator in this example.
 
-![running the storage emulator](images/running-the-storage-emulator.png?raw=true "running the storage emulator")
+![running the storage emulator](BlobFu/blob/master/Images/running-the-storage-emulator.png?raw=true "running the storage emulator")
 
 <a name="step-2" />
 ### Step 2 - Create an ASPX Page to Upload Files###
 
 Don't forget the _enctype_ attribute. I always forget that, and then the files won't be uploaded. Just sayin'.
 
-![HTML form for uploading](images/html-form-for-uploading.png?raw=true "HTML form for uploading")
+![HTML form for uploading](BlobFu/blob/master/Images/html-form-for-uploading.png?raw=true "HTML form for uploading")
 
 <a name="step-3---collect-the-data" />
 ### Step 3 - Collect the Data ###
 The code below simply collects the file upload and slams it into Windows Azure Blob Storage. 
 
-![saving blobs to blob storage](images/saving-blobs-to-blob-storage.png?raw=true "saving blobs to blob storage")
+![saving blobs to blob storage](BlobFu/blob/master/Images/saving-blobs-to-blob-storage.png?raw=true "saving blobs to blob storage")
 
 <a name="anchor-name-here" />
 ### Really? ###
 Yes, really. Looking at the Windows Azure blob storage account in ClumsyLeaf's CloudXPlorer, you'll see images that are uploaded during testing. 
 
-![checking the blob account using CloudXPlorer](images/checking-the-blob-account-using-cloudxplorer.png?raw=true)
+![checking the blob account using CloudXPlorer](BlobFu/blob/master/Images/checking-the-blob-account-using-cloudxplorer.png?raw=true)
 
 <a name="anchor-name-here" />
 ### Have Fun! ###
