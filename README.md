@@ -11,7 +11,7 @@ A library that makes it easy via a Fluent interface, to interact with Windows Bl
 
 Easy. BlobFu is available on NuGet. Just install it using the NuGet management features in Visual Studio or WebMatrix 2 and you're off and running. 
 
-![blobfu_nuget](images/blobfu_nuget.png?raw=true)
+![blobfu_nuget](https://github.com/bradygaster/BlobFu/blob/master/Images/blobfu_nuget.png?raw=true)
 
 <a name="what-does-blobfu-do" />
 ### What does BlobFu Do? ###
