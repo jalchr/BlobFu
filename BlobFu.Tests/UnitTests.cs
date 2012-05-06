@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using NUnit.Framework;
 
@@ -204,10 +205,55 @@ namespace BlobFu.Tests
                         Container = _container,
                         ListReceivedCallback = (x) =>
                             {
-                                Assert.That(!x.Any());
+                                Assert.That(!x.Any(y => y == _filename));
                             }
                     });
             }
+        }
+
+        [Test]
+        public void objects_can_be_serialized_to_blob_storage()
+        {
+            var p = new Person { Name = "brady", Id = 1 };
+
+            new BlobFuService(_connectionString)
+                .Post<Person>(new SerializedObjectSaveRequest<Person>
+                {
+                    ConnectionStringName = _connectionString,
+                    Container = _container,
+                    Filename = string.Format("{0}.prsn",
+                        Path.GetFileNameWithoutExtension(Path.GetRandomFileName())),
+                    ObjectToSave = p
+                });
+        }
+
+        [Test]
+        public void serialized_objects_can_be_re_read_via_generic_argument()
+        {
+            var nm = "brady";
+            var fn = string.Format("{0}.prsn",
+                        Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
+            var p = new Person { Name = nm, Id = 1 };
+
+            new BlobFuService(_connectionString)
+                .Post<Person>(new SerializedObjectSaveRequest<Person>
+                {
+                    ConnectionStringName = _connectionString,
+                    Container = _container,
+                    Filename = fn,
+                    ObjectToSave = p
+                })
+                .Get<Person>(new SerializedObjectGetRequest<Person>
+                {
+                    ConnectionStringName = _connectionString,
+                    Container = _container,
+                    Filename = fn,
+                    ObjectFoundCallback = (r) =>
+                    {
+                        Assert.That(r != null && r.Name.Equals(nm));
+                        Console.WriteLine(r.Name);
+                    }
+                });
         }
     }
 }

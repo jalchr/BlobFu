@@ -7,6 +7,7 @@ using System.IO;
 using Microsoft.WindowsAzure;
 using System.Configuration;
 using Microsoft.WindowsAzure.ServiceRuntime;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace BlobFu
 {
@@ -96,6 +97,47 @@ namespace BlobFu
                         .ListContainers()
                         .Select(x => x.Name)
                             .ToList());
+
+            return this;
+        }
+
+        public BlobFuService Post<T>(SerializedObjectSaveRequest<T> request)
+        {
+            VerifyContainer(request.Container);
+
+            using (var m = new MemoryStream())
+            {
+                new BinaryFormatter().Serialize(m, request.ObjectToSave);
+                m.Position = 0;
+
+                SaveToBlobStorage(new BlobStorageRequest
+                    {
+                        ConnectionStringName = request.ConnectionStringName,
+                        Container = request.Container,
+                        StreamOfDataToStore = m,
+                        Filename = request.Filename
+                    });
+            }
+
+            return this;
+        }
+
+        public BlobFuService Get<T>(SerializedObjectGetRequest<T> request)
+        {
+            VerifyContainer(request.Container);
+            var b = _container.GetBlobReference(request.Filename);
+            using (var m = new MemoryStream())
+            {
+                b.DownloadToStream(m);
+                m.Position = 0;
+                var f = new BinaryFormatter();
+                var r = f.Deserialize(m);
+                if (r.GetType().Equals(typeof(T)))
+                {
+                    if (request.ObjectFoundCallback != null)
+                        request.ObjectFoundCallback((T)r);
+                }
+            }
 
             return this;
         }

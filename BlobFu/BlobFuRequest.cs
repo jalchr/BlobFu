@@ -8,5 +8,6 @@ namespace BlobFu
     public class BlobFuRequest
     {
         public string ConnectionStringName { get; set; }
+        public string Container { get; set; }
     }
 }

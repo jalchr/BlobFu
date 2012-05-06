@@ -7,7 +7,6 @@ namespace BlobFu
 {
     public class BlobListRequest : BlobFuRequest
 	{
-		public string Container { get; set; }
 		public Action<IEnumerable<string>> ListReceivedCallback { get; set; }
 	}
 }
