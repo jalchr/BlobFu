@@ -6,6 +6,13 @@
 
 A library that makes it easy via a Fluent interface, to interact with Windows Blob storage. It gives you a very basic start to storing binary blobs in the Windows Azure cloud. 
 
+<a name="where-do-you-get-blobfu" />
+## Where Do You Get BlobFu? ##
+
+Easy. BlobFu is available on NuGet. Just install it using the NuGet management features in Visual Studio or WebMatrix 2 and you're off and running. 
+
+![blobfu_nuget](images/blobfu_nuget.png?raw=true)
+
 <a name="what-does-blobfu-do" />
 ### What does BlobFu Do? ###
 
