@@ -8,5 +8,5 @@ namespace BlobFu
     public class BlobListRequest : BlobFuRequest
 	{
 		public Action<IEnumerable<string>> ListReceivedCallback { get; set; }
-	}
+    }
 }

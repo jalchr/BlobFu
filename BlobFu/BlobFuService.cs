@@ -23,7 +23,7 @@ namespace BlobFu
                 : ConfigurationManager.AppSettings[connectionStringName];
         }
 
-        private void VerifyContainer(string container)
+        public void VerifyContainer(string container)
         {
             container = container.ToLower();
 
@@ -71,8 +71,48 @@ namespace BlobFu
                 request.StreamOfDataToStore = new MemoryStream(request.DataToStore);
             }
 
-            CloudBlob blob = this._container.GetBlobReference(request.Filename);
-            blob.UploadFromStream(request.StreamOfDataToStore);
+            // http://wely-lau.net/2012/02/26/uploading-big-files-in-windows-azure-blob-storage-with-putlistblock/
+            CloudBlockBlob blob = this._container.GetBlockBlobReference(request.Filename.ToLower());
+            //blob.Properties.CacheControl = "";
+            //blob.SetProperties();
+
+            int maxSize = 32 * 1024 * 1024; // 32 MB
+            //int maxSize = 1 * 1024 * 1024; // 1 MB
+
+            if (request.StreamOfDataToStore.Length > maxSize)
+            {
+                int id = 0;
+                long byteslength = request.StreamOfDataToStore.Length;
+                int bytesread = 0;
+                int index = 0;
+                List<string> blocklist = new List<string>();
+                int numBytesPerChunk = 1 * 1024 * 1024; //1MB per block
+                //int numBytesPerChunk = 50 * 1024; //50KB per block
+                byte[] buffer = new byte[numBytesPerChunk];
+
+                do
+                {
+                    bytesread += request.StreamOfDataToStore.Read(buffer, 0, buffer.Length);
+
+                    string blockIdBase64 = Convert.ToBase64String(System.BitConverter.GetBytes(id));
+
+                    blob.PutBlock(blockIdBase64, new MemoryStream(buffer, true), null);
+                    blocklist.Add(blockIdBase64);
+                    id++;
+                } while (byteslength - bytesread > numBytesPerChunk);
+
+                long final = byteslength - bytesread;
+                byte[] finalbuffer = new byte[final];
+                bytesread += request.StreamOfDataToStore.Read(finalbuffer, 0, finalbuffer.Length);
+
+                string blockId = Convert.ToBase64String(System.BitConverter.GetBytes(id));
+                blob.PutBlock(blockId, new MemoryStream(finalbuffer, true), null);
+                blocklist.Add(blockId);
+
+                blob.PutBlockList(blocklist);
+            }
+            else
+                blob.UploadFromStream(request.StreamOfDataToStore);
 
             if (request.BlobSavedCallback != null)
                 request.BlobSavedCallback(blob.Uri);
@@ -80,11 +120,110 @@ namespace BlobFu
             return this;
         }
 
-        public BlobFuService DeleteBlob(string fileName)
+        public bool DeleteBlob(string fileName)
         {
+            if (string.IsNullOrEmpty(fileName)) return false;
+            var uri = new Uri(fileName);
+            var container = uri.Segments[1].TrimEnd('/');
+            return DeleteBlob(container, fileName);
+        }
+
+        public bool DeleteBlob(string container, string fileName)
+        {
+            if (!ContainerExists(container)) return false;
+            VerifyContainer(container);
             CloudBlob blob = this._container.GetBlobReference(fileName);
             blob.Delete();
-            return this;
+            return true;
+        }
+
+        public bool BlobExists(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName)) return false;
+            var uri = new Uri(fileName);
+            var container = uri.Segments[1].TrimEnd('/');
+            return BlobExists(container, fileName);
+        }
+        /// <summary>
+        /// Tells whether a file exists on azure storage
+        /// </summary>
+        /// <param name="container">The container at azure blobs</param>
+        /// <param name="fileName">The AbsoluteUri of the file path</param>
+        /// <returns></returns>
+        public bool BlobExists(string container, string fileName)
+        {
+            if (!ContainerExists(container)) return false;
+            VerifyContainer(container);
+            CloudBlob blob = _container.GetBlobReference(fileName);
+            try
+            {
+                blob.FetchAttributes();
+                return true;
+            }
+            catch (StorageClientException e)
+            {
+                if (e.ErrorCode == StorageErrorCode.ResourceNotFound)
+                {
+                    return false;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+        /// <summary>
+        /// Tells whether a file exists on azure storage
+        /// </summary>
+        /// <param name="container">The container at azure blobs</param>
+        /// <param name="fileName">The AbsoluteUri of the file path</param>
+        /// <returns></returns>
+        public long GetLength(string container, string fileName)
+        {
+            if (!ContainerExists(container)) return 0;
+            VerifyContainer(container);
+            CloudBlob blob = _container.GetBlobReference(fileName);
+            try
+            {
+                blob.FetchAttributes();
+                return blob.Properties.Length;
+            }
+            catch (StorageClientException e)
+            {
+                if (e.ErrorCode == StorageErrorCode.ResourceNotFound)
+                {
+                    return 0;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        public bool ContainerExists(string containerName)
+        {
+            var container =
+                CloudStorageAccount
+                    .Parse(_connectionString)
+                    .CreateCloudBlobClient()
+                    .GetContainerReference(containerName);
+            try
+            {
+                container.FetchAttributes();
+                return true;
+            }
+            catch (StorageClientException e)
+            {
+                if (e.ErrorCode == StorageErrorCode.ResourceNotFound)
+                {
+                    return false;
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
 
         public BlobFuService ListContainers(Action<List<string>> containersFoundCallback)

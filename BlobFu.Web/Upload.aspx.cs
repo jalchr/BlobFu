@@ -27,7 +27,7 @@ namespace BlobFu.Web
                                     string.Format("File uploaded to {0}", 
                                         x.AbsoluteUri);
                                 link.NavigateUrl = x.AbsoluteUri;
-
+                                new BlobFuService("Blobs").BlobExists(x.AbsoluteUri).ToString();
                             },
                         Filename = Path.GetFileName(Request.Files[0].FileName)
                     });

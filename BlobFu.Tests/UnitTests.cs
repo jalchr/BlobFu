@@ -146,6 +146,35 @@ namespace BlobFu.Tests
         }
 
         [Test]
+        public void blob_file_exists_in_container()
+        {
+            using (var fs = File.Open(_filename, FileMode.Open))
+            {
+                byte[] bytes = new byte[fs.Length];
+                fs.Read(bytes, 0, bytes.Length);
+                var azureFileName = "";
+
+                var service = new BlobFuService(_connectionString)
+                    .SaveToBlobStorage(
+                        new BlobStorageRequest
+                        {
+                            BlobSavedCallback = (x) =>
+                            {
+                                azureFileName = x.AbsoluteUri;
+                                Console.WriteLine(x.AbsoluteUri);
+                            },
+                            Container = _container,
+                            Filename = _filename,
+                            DataToStore = bytes
+                        });
+
+                Assert.True(service.BlobExists(azureFileName));
+
+                service.DeleteBlob(_filename);
+            }
+        }
+
+        [Test]
         public void blob_containers_can_be_created()
         {
             using (var fs = File.Open(_filename, FileMode.Open))
@@ -182,7 +211,7 @@ namespace BlobFu.Tests
                 byte[] bytes = new byte[fs.Length];
                 fs.Read(bytes, 0, bytes.Length);
 
-                new BlobFuService(_connectionString)
+                var service = new BlobFuService(_connectionString)
                     .SaveToBlobStorage(
                         new BlobStorageRequest
                         {
@@ -198,16 +227,18 @@ namespace BlobFu.Tests
                     {
                         Container = _container,
                         ListReceivedCallback = (x) => Assert.That(x.Any())
-                    })
-                    .DeleteBlob(_filename)
-                    .ListBlobs(new BlobListRequest
-                    {
-                        Container = _container,
-                        ListReceivedCallback = (x) =>
-                            {
-                                Assert.That(!x.Any(y => y == _filename));
-                            }
                     });
+
+                service.DeleteBlob(_filename);
+
+                service.ListBlobs(new BlobListRequest
+                {
+                    Container = _container,
+                    ListReceivedCallback = (x) =>
+                        {
+                            Assert.That(!x.Any(y => y == _filename));
+                        }
+                });
             }
         }
 
